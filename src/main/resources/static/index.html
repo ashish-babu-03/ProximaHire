@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProximaHire - AI-Powered Job Matching</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-card: #111111;
+            --border-color: #222222;
+            --text-primary: #ffffff;
+            --text-muted: #888888;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --green: #22c55e;
+            --orange: #f97316;
+            --red: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-muted { color: var(--text-muted); }
+        .text-center { text-align: center; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .error-msg { color: var(--red); font-size: 0.875rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 0.25rem; border: 1px solid rgba(239, 68, 68, 0.2); }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+        
+        @keyframes pulse {
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        /* Components */
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .btn:hover:not(:disabled) { background-color: var(--accent-hover); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+
+        .input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s;
+            font-size: 0.95rem;
+        }
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-green { background: rgba(34, 197, 94, 0.1); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-orange { background: rgba(249, 115, 22, 0.1); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.2); }
+        .badge-red { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        /* Screens Layout */
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 1.5rem;
+        }
+        
+        .dashboard-screen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        /* Auth Screen specific */
+        .auth-container { width: 100%; max-width: 400px; }
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
+        .tab { 
+            flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; 
+            color: var(--text-muted); border-bottom: 2px solid transparent; 
+            transition: all 0.2s;
+        }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+        .brand-title { font-size: 1.875rem; font-weight: 700; text-align: center; background: linear-gradient(to right, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-subtitle { font-size: 0.875rem; color: var(--text-muted); text-align: center; margin-bottom: 2rem; }
+
+        /* Upload Screen specific */
+        .upload-container { width: 100%; max-width: 500px; }
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.02);
+            position: relative;
+        }
+        .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(139, 92, 246, 0.05); }
+        .dropzone-icon { font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .selected-file { margin-top: 1rem; font-size: 0.875rem; color: var(--accent); font-weight: 500; }
+
+        /* Dashboard specific */
+        .header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-logo { font-weight: 700; font-size: 1.25rem; color: #fff; }
+        .search-bar { flex: 1; max-width: 600px; margin: 0 2rem; position: relative; }
+        .search-input { 
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: 9999px; color: #fff; font-family: inherit; transition: all 0.2s;
+        }
+        .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        
+        .main-content { padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .section-header { margin-bottom: 2rem; }
+        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+        
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .job-card { 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: var(--radius-lg); padding: 1.5rem; 
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .job-card:hover { transform: translateY(-4px); border-color: rgba(139, 92, 246, 0.5); }
+        .job-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .job-title { font-weight: 600; font-size: 1.125rem; margin-bottom: 0.25rem; line-height: 1.3; }
+        .job-company { color: var(--text-muted); font-size: 0.875rem; }
+        .job-score-container { text-align: center; margin-bottom: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem 0;}
+        .job-score { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
+        
+        /* Modal specific */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; z-index: 50;
+            padding: 2rem;
+        }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); width: 100%; max-width: 800px; max-height: 90vh;
+            display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-header {
+            padding: 1.5rem; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; font-size: 0.95rem; line-height: 1.6;}
+        .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; padding: 0.5rem; line-height: 1;}
+        .close-btn:hover { color: #fff; }
+        
+        .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
+        .loading-icon { font-size: 3rem; color: var(--accent); margin-bottom: 1rem; }
+        
+        .report-section { margin-bottom: 1.5rem; }
+        .report-section strong { color: #fff; display: block; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.05rem; }
+        .report-section ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #d4d4d4; }
+        .report-section li { margin-bottom: 0.25rem; }
+        .report-section p { color: #d4d4d4; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: Auth Screen -->
+    <div id="auth-screen" class="screen fade-in">
+        <div class="auth-container card">
+            <h1 class="brand-title">ProximaHire</h1>
+            <p class="brand-subtitle">AI-Powered Job Matching</p>
+            
+            <div class="tabs">
+                <div class="tab active" id="tab-login" onclick="switchAuthTab('login')">Login</div>
+                <div class="tab" id="tab-register" onclick="switchAuthTab('register')">Register</div>
+            </div>
+
+            <div id="form-error" class="error-msg hidden mb-4"></div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="mb-4">
+                    <input type="email" id="auth-email" class="input" placeholder="Email address" required>
+                </div>
+                <div class="mb-6">
+                    <input type="password" id="auth-password" class="input" placeholder="Password" required>
+                </div>
+                <button type="submit" id="auth-submit-btn" class="btn">
+                    <span id="auth-btn-text">Sign In</span>
+                    <span id="auth-spinner" class="spinner hidden"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: Upload Resume Screen -->
+    <div id="upload-screen" class="screen hidden">
+        <div class="upload-container card fade-in text-center">
+            <h2 class="mb-2" style="font-weight: 600;">Welcome back</h2>
+            <p id="welcome-email" class="text-muted mb-6">user@example.com</p>
+
+            <div id="upload-error" class="error-msg hidden mb-4"></div>
+
+            <form id="upload-form" onsubmit="handleUploadSubmit(event)">
+                <div class="dropzone mb-6" id="dropzone">
+                    <div class="dropzone-icon">☁️</div>
+                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Drop your PDF resume here or click to browse</p>
+                    <p class="text-muted" style="font-size: 0.8rem;">Only PDF files are supported</p>
+                    <input type="file" id="resume-file" accept=".pdf" class="file-input" onchange="handleFileChange(event)" required>
+                </div>
+                <div id="selected-file-name" class="selected-file hidden mb-6"></div>
+                
+                <p id="upload-progress-msg" class="text-muted text-sm mb-4 hidden pulse" style="font-size: 0.9rem;">Parsing your resume and generating AI embeddings...</p>
+                
+                <button type="submit" id="upload-submit-btn" class="btn" disabled>
+                    <span id="upload-btn-text">Upload Resume</span>
+                    <span id="upload-spinner" class="spinner hidden"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Jobs Dashboard -->
+    <div id="dashboard-screen" class="dashboard-screen hidden fade-in">
+        <header class="header">
+            <div class="header-logo">ProximaHire</div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Semantic search... e.g. 'backend engineer with Kafka experience'" onkeypress="handleSearchEnter(event)">
+            </div>
+            <button onclick="logout()" class="btn btn-outline" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </header>
+
+        <main class="main-content">
+            <div class="section-header">
+                <h2 class="section-title">Your AI Match Results</h2>
+                <p class="text-muted" id="jobs-subtitle">Showing all available jobs</p>
+            </div>
+
+            <div id="jobs-error" class="error-msg hidden mb-4" style="text-align: left;"></div>
+            
+            <div id="dashboard-loading" class="loading-state hidden">
+                <div class="spinner" style="width: 3rem; height: 3rem; border-width: 3px; border-top-color: var(--accent);"></div>
+                <p class="text-muted mt-4">AI is curating your matches...</p>
+            </div>
+
+            <div id="jobs-grid" class="jobs-grid">
+                <!-- Job cards will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Gap Analysis Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-job-title" style="font-size: 1.25rem; font-weight: 600;">Job Title</h3>
+                    <p id="modal-company" class="text-muted" style="font-size: 0.875rem;">Company Name</p>
+                </div>
+                <button class="close-btn" onclick="closeModal(null)">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div id="modal-loading" class="loading-state pulse">
+                    <div class="loading-icon">✨</div>
+                    <p style="font-weight: 500;">AI is analyzing your profile...</p>
+                    <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">This takes 30-60 seconds</p>
+                </div>
+                <div id="modal-report" class="hidden">
+                    <!-- Report injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let authToken = null;
+        let currentUserEmail = null;
+        let currentAuthMode = 'login'; // login | register
+
+        // Elements
+        const screens = {
+            auth: document.getElementById('auth-screen'),
+            upload: document.getElementById('upload-screen'),
+            dashboard: document.getElementById('dashboard-screen')
+        };
+
+        // --- AUTH LOGIC ---
+        function switchAuthTab(mode) {
+            currentAuthMode = mode;
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+            document.getElementById('auth-btn-text').innerText = mode === 'login' ? 'Sign In' : 'Create Account';
+            document.getElementById('form-error').classList.add('hidden');
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const role = 'CANDIDATE';
+            
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const spinner = document.getElementById('auth-spinner');
+            const errorDiv = document.getElementById('form-error');
+            
+            submitBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+
+            try {
+                if (currentAuthMode === 'register') {
+                    const res = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, role })
+                    });
+                    
+                    if (!res.ok) {
+                        const txt = await res.text();
+                        throw new Error(txt || 'Registration failed.');
+                    }
+                    
+                    switchAuthTab('login');
+                    document.getElementById('auth-password').value = '';
+                    alert('Registration successful! Please login.');
+                } else {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    if (!res.ok) {
+                        const txt = await res.text();
+                        throw new Error(txt || 'Invalid email or password.');
+                    }
+                    
+                    const data = await res.json();
+                    authToken = data.token;
+                    currentUserEmail = email;
+                    
+                    showScreen('upload');
+                    document.getElementById('welcome-email').innerText = currentUserEmail;
+                }
+            } catch (error) {
+                errorDiv.innerText = error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUserEmail = null;
+            document.getElementById('auth-form').reset();
+            document.getElementById('upload-form').reset();
+            document.getElementById('selected-file-name').classList.add('hidden');
+            document.getElementById('upload-submit-btn').disabled = true;
+            showScreen('auth');
+        }
+
+        // --- UPLOAD LOGIC ---
+        function handleFileChange(e) {
+            const file = e.target.files[0];
+            const nameDiv = document.getElementById('selected-file-name');
+            const submitBtn = document.getElementById('upload-submit-btn');
+            
+            if (file) {
+                nameDiv.innerText = `Selected: ${file.name}`;
+                nameDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+            } else {
+                nameDiv.classList.add('hidden');
+                submitBtn.disabled = true;
+            }
+        }
+
+        async function handleUploadSubmit(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('resume-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const submitBtn = document.getElementById('upload-submit-btn');
+            const spinner = document.getElementById('upload-spinner');
+            const progressMsg = document.getElementById('upload-progress-msg');
+            const errorDiv = document.getElementById('upload-error');
+
+            submitBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            progressMsg.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/resumes/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+
+                if (!res.ok) {
+                     const txt = await res.text();
+                     throw new Error(txt || 'Failed to upload resume.');
+                }
+                
+                showScreen('dashboard');
+                loadJobs();
+            } catch (error) {
+                errorDiv.innerText = error.message;
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+            } finally {
+                spinner.classList.add('hidden');
+                progressMsg.classList.add('hidden');
+            }
+        }
+
+        // --- DASHBOARD LOGIC ---
+        function getBadgeClass(score) {
+            if (score > 70) return 'badge-green';
+            if (score >= 40) return 'badge-orange';
+            return 'badge-red';
+        }
+
+        function getClassificationName(score) {
+            if (score > 70) return 'GREEN';
+            if (score >= 40) return 'ORANGE';
+            return 'RED';
+        }
+
+        async function loadJobs() {
+            const grid = document.getElementById('jobs-grid');
+            const loading = document.getElementById('dashboard-loading');
+            const errorDiv = document.getElementById('jobs-error');
+            const subtitle = document.getElementById('jobs-subtitle');
+
+            grid.innerHTML = '';
+            loading.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+            subtitle.innerText = 'Fetching AI matches...';
+
+            try {
+                const res = await fetch('/api/jobs', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch jobs. Please verify your authentication.');
+                
+                const jobs = await res.json();
+                renderJobs(jobs);
+                subtitle.innerText = `Showing ${jobs.length} matched jobs`;
+            } catch (error) {
+                errorDiv.innerText = error.message;
+                errorDiv.classList.remove('hidden');
+                subtitle.innerText = 'Error loading jobs';
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        async function handleSearchEnter(e) {
+            if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                const grid = document.getElementById('jobs-grid');
+                const loading = document.getElementById('dashboard-loading');
+                const errorDiv = document.getElementById('jobs-error');
+                const subtitle = document.getElementById('jobs-subtitle');
+
+                if (!query) {
+                    loadJobs();
+                    return;
+                }
+
+                grid.innerHTML = '';
+                loading.classList.remove('hidden');
+                errorDiv.classList.add('hidden');
+                subtitle.innerText = `Searching for: "${query}"...`;
+
+                try {
+                    const res = await fetch('/api/jobs/search', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}` 
+                        },
+                        body: JSON.stringify({ query })
+                    });
+
+                    if (!res.ok) throw new Error('Search failed. The query may be too complex.');
+                    
+                    const jobs = await res.json();
+                    renderJobs(jobs);
+                    subtitle.innerText = `Found top ${jobs.length} relevant jobs for "${query}"`;
+                } catch (error) {
+                    errorDiv.innerText = error.message;
+                    errorDiv.classList.remove('hidden');
+                    subtitle.innerText = 'Search encountered an error.';
+                } finally {
+                    loading.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderJobs(jobs) {
+            const grid = document.getElementById('jobs-grid');
+            if (jobs.length === 0) {
+                grid.innerHTML = `<div class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">No matching jobs found.</div>`;
+                return;
+            }
+            grid.innerHTML = jobs.map(job => `
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div>
+                            <h3 class="job-title">${escapeHtml(job.title)}</h3>
+                            <p class="job-company">${escapeHtml(job.company)}</p>
+                        </div>
+                    </div>
+                    <div class="job-score-container">
+                        <div class="job-score" style="color: ${getScoreColor(job.matchScore)}">${job.matchScore}</div>
+                        <span class="badge ${getBadgeClass(job.matchScore)}">${getClassificationName(job.matchScore)} MATCH</span>
+                    </div>
+                    <button class="btn btn-outline" onclick="openGapAnalysis('${job.jobId}', '${escapeHtml(job.title)}', '${escapeHtml(job.company)}')">
+                        Analyse Gap
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function getScoreColor(score) {
+            if (score > 70) return 'var(--green)';
+            if (score >= 40) return 'var(--orange)';
+            return 'var(--red)';
+        }
+
+        // --- GAP ANALYSIS MODAL LOGIC ---
+        function openGapAnalysis(jobId, title, company) {
+            document.getElementById('modal-job-title').innerText = unescapeHtml(title);
+            document.getElementById('modal-company').innerText = unescapeHtml(company);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('modal-loading').classList.remove('hidden');
+            document.getElementById('modal-report').classList.add('hidden');
+            
+            fetchGapAnalysis(jobId);
+        }
+
+        async function fetchGapAnalysis(jobId) {
+            try {
+                const res = await fetch(`/api/jobs/${jobId}/gap-analysis`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(txt || 'Failed to generate gap analysis.');
+                }
+                
+                const data = await res.json();
+                
+                const reportDiv = document.getElementById('modal-report');
+                reportDiv.innerHTML = formatReport(data.report);
+                
+                document.getElementById('modal-loading').classList.add('hidden');
+                reportDiv.classList.remove('hidden');
+            } catch (error) {
+                document.getElementById('modal-loading').classList.add('hidden');
+                document.getElementById('modal-report').innerHTML = `<div class="error-msg">${error.message}</div>`;
+                document.getElementById('modal-report').classList.remove('hidden');
+            }
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== document.getElementById('modal-overlay') && e.target.tagName !== 'BUTTON') return;
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById('modal-report').innerHTML = '';
+        }
+
+        // --- UTILS ---
+        function showScreen(screenId) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenId].classList.remove('hidden');
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+        
+        function unescapeHtml(safe) {
+            if (!safe) return '';
+            return safe
+                 .replace(/&amp;/g, "&")
+                 .replace(/&lt;/g, "<")
+                 .replace(/&gt;/g, ">")
+                 .replace(/&quot;/g, "\"")
+                 .replace(/&#039;/g, "'");
+        }
+
+        // Markdown-like parser for the LLM output
+        function formatReport(text) {
+            let html = escapeHtml(text);
+            
+            // Replace bold **text**
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Handle lists (bullet and numbered)
+            // Splitting by lines makes it easier
+            const lines = html.split('\n');
+            let formatted = [];
+            let inList = false;
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) {
+                    if (inList) { formatted.push('</ul>'); inList = false; }
+                    formatted.push('<br>');
+                    continue;
+                }
+                
+                // Match bullet or numbered list
+                const listMatch = line.match(/^(\*|-|\d+\.)\s+(.*)/);
+                if (listMatch) {
+                    if (!inList) { formatted.push('<ul>'); inList = true; }
+                    formatted.push(`<li>${listMatch[2]}</li>`);
+                } else {
+                    if (inList) { formatted.push('</ul>'); inList = false; }
+                    // Check if it's a heading (like # Heading or just caps/strong without list)
+                    if (line.startsWith('#')) {
+                        line = `<strong>${line.replace(/^#+\s*/, '')}</strong>`;
+                    }
+                    formatted.push(`<p>${line}</p>`);
+                }
+            }
+            if (inList) { formatted.push('</ul>'); }
+            
+            return `<div class="report-section">${formatted.join('')}</div>`;
+        }
+
+        // Dropzone interactions
+        const dropzone = document.getElementById('dropzone');
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                // Setting files property on input programmatically is restricted, but we can do this via DataTransfer
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('resume-file').files = dt.files;
+                handleFileChange({target: {files: dt.files}});
+            }
+        });
+    </script>
+</body>
+</html>
