@@ -18,25 +18,66 @@ data class OllamaGenerateResponse(
     val done: Boolean = false
 )
 
+data class OpenRouterMessage(val role: String, val content: String)
+data class OpenRouterRequest(val model: String, val messages: List<OpenRouterMessage>)
+data class OpenRouterChoice(val message: OpenRouterMessage)
+data class OpenRouterResponse(val choices: List<OpenRouterChoice>)
+
 @Service
 class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
 
     private val logger = LoggerFactory.getLogger(GapAnalysisService::class.java)
 
+    @Value("\${llm.provider:ollama}")
+    lateinit var llmProvider: String
+
     @Value("\${ollama.url:http://localhost:11434}")
     lateinit var ollamaUrl: String
 
     @Value("\${ollama.generate.model:llama3.2}")
-    lateinit var generateModel: String
+    lateinit var ollamaModel: String
+
+    @Value("\${openrouter.api.key:}")
+    lateinit var openRouterApiKey: String
+
+    @Value("\${openrouter.model:meta-llama/llama-3.2-3b-instruct:free}")
+    lateinit var openRouterModel: String
 
     /**
      * Generates a gap analysis and returns it as a reactive stream (Flux).
-     * This processes the NDJSON stream from Ollama and emits text chunks in real-time.
      */
     fun analyzeGapStream(resumeText: String, jobDescriptionText: String): Flux<String> {
-        val client = webClientBuilder.baseUrl(ollamaUrl).build()
         val prompt = buildPrompt(resumeText, jobDescriptionText)
-        val request = OllamaGenerateRequest(model = generateModel, prompt = prompt, stream = true)
+
+        if (llmProvider == "openrouter") {
+            return Flux.defer {
+                val client = webClientBuilder.baseUrl("https://openrouter.ai/api/v1/chat/completions").build()
+                val request = OpenRouterRequest(
+                    model = openRouterModel,
+                    messages = listOf(OpenRouterMessage("user", prompt))
+                )
+                
+                try {
+                    val response = client.post()
+                        .header("Authorization", "Bearer $openRouterApiKey")
+                        .header("Content-Type", "application/json")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(OpenRouterResponse::class.java)
+                        .block()
+                        
+                    val content = response?.choices?.getOrNull(0)?.message?.content 
+                        ?: throw RuntimeException("Empty response from OpenRouter")
+                    Flux.just(content)
+                } catch (e: Exception) {
+                    Flux.error(RuntimeException("Error communicating with OpenRouter API: ${e.message}", e))
+                }
+            }
+        }
+
+        // Ollama local stream logic
+        val client = webClientBuilder.baseUrl(ollamaUrl).build()
+        val request = OllamaGenerateRequest(model = ollamaModel, prompt = prompt, stream = true)
 
         return client.post()
             .uri("/api/generate")
@@ -51,19 +92,17 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
 
     /**
      * Generates a gap analysis and blocks until the full text is aggregated.
-     * Useful for synchronous operations where real-time streaming isn't required.
      */
     fun analyzeGap(resumeText: String, jobDescriptionText: String): String {
-        logger.info("Starting gap analysis...")
+        logger.info("Starting gap analysis via \$llmProvider...")
         val startTime = System.currentTimeMillis()
         
-        val client = webClientBuilder.baseUrl(ollamaUrl).build()
         val result = analyzeGapStream(resumeText, jobDescriptionText)
             .reduce { acc, chunk -> acc + chunk }
             .block() ?: throw RuntimeException("Failed to generate gap analysis: Stream returned empty")
             
         val duration = System.currentTimeMillis() - startTime
-        logger.info("Gap analysis completed in ${duration}ms")
+        logger.info("Gap analysis completed in \${duration}ms")
         
         return result
     }
