@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProximaHire - AI-Powered Job Matching</title>
+    <title>ProximaHire — AI Job Matching</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #0a0a0a;
-            --bg-card: #111111;
+            --bg-base: #000000;
+            --bg-card: rgba(17, 17, 17, 0.7);
             --border-color: #222222;
-            --text-primary: #ffffff;
+            --text-primary: #ededed;
             --text-muted: #888888;
             --accent: #8b5cf6;
             --accent-hover: #7c3aed;
             --green: #22c55e;
             --orange: #f97316;
             --red: #ef4444;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
-            --radius-md: 0.5rem;
-            --radius-lg: 1rem;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
         }
 
         * {
@@ -33,12 +32,19 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
+            /* Linear/Vercel grid pattern */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center top;
             color: var(--text-primary);
             line-height: 1.5;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Utility Classes */
@@ -49,22 +55,15 @@
         .mb-4 { margin-bottom: 1rem; }
         .mb-6 { margin-bottom: 1.5rem; }
         .mt-4 { margin-top: 1rem; }
-        .flex { display: flex; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .justify-center { justify-content: center; }
-        .error-msg { color: var(--red); font-size: 0.875rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 0.25rem; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .error-msg { color: var(--red); font-size: 0.875rem; margin-top: 0.5rem; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid rgba(239, 68, 68, 0.2); }
         
         /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
         .spinner {
             border: 2px solid rgba(255,255,255,0.1);
             border-top-color: #fff;
@@ -77,15 +76,13 @@
             margin-left: 0.5rem;
         }
         
-        @keyframes pulse {
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 50% { opacity: 0.5; } }
         .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
         /* Components */
         .btn {
-            background-color: var(--accent);
-            color: white;
+            background-color: var(--text-primary);
+            color: var(--bg-base);
             border: none;
             padding: 0.75rem 1.5rem;
             border-radius: var(--radius-md);
@@ -99,105 +96,89 @@
             font-size: 0.95rem;
             font-family: inherit;
         }
-        .btn:hover:not(:disabled) { background-color: var(--accent-hover); }
+        .btn:hover:not(:disabled) { background-color: #d4d4d4; }
         .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
         .btn-outline {
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-primary);
+            backdrop-filter: blur(10px);
         }
-        .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+        .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.05); border-color: #444; }
 
         .input {
             width: 100%;
             padding: 0.75rem 1rem;
-            background-color: var(--bg-base);
+            background-color: rgba(10, 10, 10, 0.8);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             color: var(--text-primary);
             font-family: inherit;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
             font-size: 0.95rem;
         }
         .input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 1px var(--accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
         }
+
+        .password-container { position: relative; display: flex; align-items: center; }
+        .password-container .input { padding-right: 3rem; }
+        .password-toggle {
+            position: absolute; right: 0.75rem; background: none; border: none;
+            color: var(--text-muted); cursor: pointer; padding: 0.25rem;
+            display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+        }
+        .password-toggle:hover { color: #fff; }
+        .password-toggle svg { width: 1.25rem; height: 1.25rem; }
 
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            padding: 2rem;
-            box-shadow: var(--shadow-lg);
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-
-        .badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .badge-green { background: rgba(34, 197, 94, 0.1); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.2); }
-        .badge-orange { background: rgba(249, 115, 22, 0.1); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.2); }
-        .badge-red { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
 
         /* Screens Layout */
-        .screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            width: 100%;
-            padding: 1.5rem;
-        }
-        
-        .dashboard-screen {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            width: 100%;
-            justify-content: flex-start;
-        }
+        .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; width: 100%; padding: 1.5rem; }
+        .dashboard-screen { display: flex; flex-direction: column; min-height: 100vh; width: 100%; justify-content: flex-start; }
 
         /* Auth Screen specific */
-        .auth-container { width: 100%; max-width: 400px; }
-        .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
-        .tab { 
-            flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; 
-            color: var(--text-muted); border-bottom: 2px solid transparent; 
-            transition: all 0.2s;
-        }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-        .brand-title { font-size: 1.875rem; font-weight: 700; text-align: center; background: linear-gradient(to right, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .brand-subtitle { font-size: 0.875rem; color: var(--text-muted); text-align: center; margin-bottom: 2rem; }
+        .auth-container { width: 100%; max-width: 420px; }
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab.active { color: var(--text-primary); border-bottom-color: var(--text-primary); font-weight: 500; }
+        .brand-title { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 0.25rem; letter-spacing: -0.02em; display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+        .brand-icon { background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-subtitle { font-size: 0.875rem; color: var(--text-muted); text-align: center; margin-bottom: 2.5rem; }
 
         /* Upload Screen specific */
-        .upload-container { width: 100%; max-width: 500px; }
+        .upload-container { width: 100%; max-width: 540px; }
         .dropzone {
-            border: 2px dashed var(--border-color);
+            border: 1px dashed #444;
             border-radius: var(--radius-lg);
-            padding: 3rem 2rem;
+            padding: 4rem 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: rgba(255,255,255,0.02);
+            background: rgba(255,255,255,0.01);
             position: relative;
         }
         .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(139, 92, 246, 0.05); }
         .dropzone-icon { font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem; }
         .file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .selected-file { margin-top: 1rem; font-size: 0.875rem; color: var(--accent); font-weight: 500; }
+        .selected-file { margin-top: 1.5rem; font-size: 0.875rem; color: var(--accent); font-weight: 500; background: rgba(139, 92, 246, 0.1); padding: 0.5rem 1rem; border-radius: var(--radius-md); display: inline-block; }
 
         /* Dashboard specific */
         .header {
             border-bottom: 1px solid var(--border-color);
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -206,62 +187,109 @@
             align-items: center;
             justify-content: space-between;
         }
-        .header-logo { font-weight: 700; font-size: 1.25rem; color: #fff; }
-        .search-bar { flex: 1; max-width: 600px; margin: 0 2rem; position: relative; }
+        .header-logo { font-weight: 700; font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em; }
+        
+        .search-bar { flex: 1; max-width: 500px; margin: 0 2rem; position: relative; }
         .search-input { 
-            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; 
-            background: var(--bg-card); border: 1px solid var(--border-color); 
-            border-radius: 9999px; color: #fff; font-family: inherit; transition: all 0.2s;
+            width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); 
+            border-radius: 6px; color: #fff; font-family: inherit; transition: all 0.2s;
+            font-size: 0.9rem;
         }
-        .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input:focus { outline: none; border-color: rgba(139, 92, 246, 0.5); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); background: rgba(17, 17, 17, 0.8); }
+        .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem; }
         
-        .main-content { padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .section-header { margin-bottom: 2rem; }
-        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .main-content { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
         
-        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: rgba(17, 17, 17, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .stat-value { font-size: 1.25rem; font-weight: 600; color: #fff; }
+        
+        /* Jobs Grid */
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .job-card { 
-            background: var(--bg-card); border: 1px solid var(--border-color); 
-            border-radius: var(--radius-lg); padding: 1.5rem; 
-            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--radius-lg); 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s, border-color 0.3s;
             display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: slideUpFade 0.5s ease-out backwards;
+            backdrop-filter: blur(10px);
         }
-        .job-card:hover { transform: translateY(-4px); border-color: rgba(139, 92, 246, 0.5); }
+        .job-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6); opacity: 0.5; transition: opacity 0.3s;
+        }
+        .job-card:hover { transform: translateY(-4px); border-color: rgba(139, 92, 246, 0.3); box-shadow: 0 12px 24px -10px rgba(139, 92, 246, 0.15); }
+        .job-card:hover::before { opacity: 1; }
+        
+        .job-card-content { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
         .job-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-        .job-title { font-weight: 600; font-size: 1.125rem; margin-bottom: 0.25rem; line-height: 1.3; }
-        .job-company { color: var(--text-muted); font-size: 0.875rem; }
-        .job-score-container { text-align: center; margin-bottom: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem 0;}
-        .job-score { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
+        .job-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 0.4rem; line-height: 1.4; color: #fff; }
+        
+        .company-row { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.85rem; }
+        .company-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        
+        .match-badge {
+            margin-top: auto; padding-top: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+        }
+
+        .btn-analyse {
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), rgba(109, 40, 217, 0.1));
+            color: #b592f9; border: none; border-top: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 1rem; font-weight: 500; cursor: pointer; width: 100%; transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-analyse:hover { background: linear-gradient(90deg, #8b5cf6, #6d28d9); color: white; border-top-color: transparent; }
         
         /* Modal specific */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center; z-index: 50;
-            padding: 2rem;
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 50; padding: 2rem;
         }
         .modal-content {
             background: var(--bg-card); border: 1px solid var(--border-color);
             border-radius: var(--radius-lg); width: 100%; max-width: 800px; max-height: 90vh;
-            display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             animation: fadeIn 0.3s ease-out;
         }
         .modal-header {
-            padding: 1.5rem; border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);
         }
-        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; font-size: 0.95rem; line-height: 1.6;}
-        .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; padding: 0.5rem; line-height: 1;}
+        .modal-body { padding: 2rem; overflow-y: auto; flex: 1; font-size: 0.95rem; line-height: 1.7; color: #d4d4d4;}
+        .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; padding: 0.5rem; line-height: 1; transition: color 0.2s;}
         .close-btn:hover { color: #fff; }
         
         .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
-        .loading-icon { font-size: 3rem; color: var(--accent); margin-bottom: 1rem; }
+        .loading-icon { font-size: 2.5rem; margin-bottom: 1rem; animation: pulse 2s infinite; }
         
         .report-section { margin-bottom: 1.5rem; }
-        .report-section strong { color: #fff; display: block; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.05rem; }
-        .report-section ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #d4d4d4; }
-        .report-section li { margin-bottom: 0.25rem; }
-        .report-section p { color: #d4d4d4; margin-bottom: 1rem; }
+        .report-section strong { color: #fff; display: block; margin-top: 1.5rem; margin-bottom: 0.75rem; font-size: 1.05rem; font-weight: 600;}
+        .report-section ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+        .report-section li { margin-bottom: 0.5rem; }
+        .report-section p { margin-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -269,7 +297,7 @@
     <!-- SCREEN 1: Auth Screen -->
     <div id="auth-screen" class="screen fade-in">
         <div class="auth-container card">
-            <h1 class="brand-title">ProximaHire</h1>
+            <h1 class="brand-title"><span class="brand-icon">✨</span> ProximaHire</h1>
             <p class="brand-subtitle">AI-Powered Job Matching</p>
             
             <div class="tabs">
@@ -283,8 +311,14 @@
                 <div class="mb-4">
                     <input type="email" id="auth-email" class="input" placeholder="Email address" required>
                 </div>
-                <div class="mb-6">
+                <div class="mb-6 password-container">
                     <input type="password" id="auth-password" class="input" placeholder="Password" required>
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('auth-password')" aria-label="Toggle password visibility">
+                        <svg id="eye-icon-auth-password" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                    </button>
                 </div>
                 <button type="submit" id="auth-submit-btn" class="btn">
                     <span id="auth-btn-text">Sign In</span>
@@ -297,21 +331,21 @@
     <!-- SCREEN 2: Upload Resume Screen -->
     <div id="upload-screen" class="screen hidden">
         <div class="upload-container card fade-in text-center">
-            <h2 class="mb-2" style="font-weight: 600;">Welcome back</h2>
+            <h2 class="mb-2" style="font-weight: 600; font-size: 1.5rem;">Welcome back</h2>
             <p id="welcome-email" class="text-muted mb-6">user@example.com</p>
 
             <div id="upload-error" class="error-msg hidden mb-4"></div>
 
             <form id="upload-form" onsubmit="handleUploadSubmit(event)">
                 <div class="dropzone mb-6" id="dropzone">
-                    <div class="dropzone-icon">☁️</div>
-                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Drop your PDF resume here or click to browse</p>
-                    <p class="text-muted" style="font-size: 0.8rem;">Only PDF files are supported</p>
+                    <div class="dropzone-icon">📄</div>
+                    <p style="margin-bottom: 0.5rem; font-weight: 500; color: #fff;">Drop your PDF resume here</p>
+                    <p class="text-muted" style="font-size: 0.85rem;">or click to browse your files</p>
                     <input type="file" id="resume-file" accept=".pdf" class="file-input" onchange="handleFileChange(event)" required>
                 </div>
                 <div id="selected-file-name" class="selected-file hidden mb-6"></div>
                 
-                <p id="upload-progress-msg" class="text-muted text-sm mb-4 hidden pulse" style="font-size: 0.9rem;">Parsing your resume and generating AI embeddings...</p>
+                <p id="upload-progress-msg" class="text-muted text-sm mb-4 hidden pulse" style="font-size: 0.9rem;">Parsing resume and generating 768-D vector embeddings...</p>
                 
                 <button type="submit" id="upload-submit-btn" class="btn" disabled>
                     <span id="upload-btn-text">Upload Resume</span>
@@ -324,25 +358,36 @@
     <!-- SCREEN 3: Jobs Dashboard -->
     <div id="dashboard-screen" class="dashboard-screen hidden fade-in">
         <header class="header">
-            <div class="header-logo">ProximaHire</div>
+            <div class="header-logo"><span class="brand-icon">✨</span> ProximaHire</div>
             <div class="search-bar">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="search-input" class="search-input" placeholder="Semantic search... e.g. 'backend engineer with Kafka experience'" onkeypress="handleSearchEnter(event)">
             </div>
-            <button onclick="logout()" class="btn btn-outline" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+            <button onclick="logout()" class="btn-outline" style="padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem;">Logout</button>
         </header>
 
         <main class="main-content">
-            <div class="section-header">
-                <h2 class="section-title">Your AI Match Results</h2>
-                <p class="text-muted" id="jobs-subtitle">Showing all available jobs</p>
+            
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-label">AI Engine</div>
+                    <div class="stat-value">Llama 3.2 / Nomic</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Vector Dimensions</div>
+                    <div class="stat-value">768</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Network Status</div>
+                    <div class="stat-value" id="jobs-subtitle" style="font-size: 1rem; padding-top: 0.25rem;">Showing all available jobs</div>
+                </div>
             </div>
 
             <div id="jobs-error" class="error-msg hidden mb-4" style="text-align: left;"></div>
             
             <div id="dashboard-loading" class="loading-state hidden">
-                <div class="spinner" style="width: 3rem; height: 3rem; border-width: 3px; border-top-color: var(--accent);"></div>
-                <p class="text-muted mt-4">AI is curating your matches...</p>
+                <div class="spinner" style="width: 2.5rem; height: 2.5rem; border-width: 2px; border-top-color: var(--accent);"></div>
+                <p class="text-muted mt-4">Computing vector similarities...</p>
             </div>
 
             <div id="jobs-grid" class="jobs-grid">
@@ -356,16 +401,16 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <div>
-                    <h3 id="modal-job-title" style="font-size: 1.25rem; font-weight: 600;">Job Title</h3>
-                    <p id="modal-company" class="text-muted" style="font-size: 0.875rem;">Company Name</p>
+                    <h3 id="modal-job-title" style="font-size: 1.15rem; font-weight: 600; color: #fff;">Job Title</h3>
+                    <p id="modal-company" class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">Company Name</p>
                 </div>
                 <button class="close-btn" onclick="closeModal(null)">&times;</button>
             </div>
             <div class="modal-body" id="modal-body">
-                <div id="modal-loading" class="loading-state pulse">
+                <div id="modal-loading" class="loading-state">
                     <div class="loading-icon">✨</div>
-                    <p style="font-weight: 500;">AI is analyzing your profile...</p>
-                    <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">This takes 30-60 seconds</p>
+                    <p style="font-weight: 500; color: #fff;">AI is analyzing your profile...</p>
+                    <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">Running inference on Llama 3.2</p>
                 </div>
                 <div id="modal-report" class="hidden">
                     <!-- Report injected here -->
@@ -379,6 +424,19 @@
         let authToken = null;
         let currentUserEmail = null;
         let currentAuthMode = 'login'; // login | register
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById('eye-icon-' + inputId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />';
+            }
+        }
 
         // Elements
         const screens = {
@@ -524,16 +582,10 @@
         }
 
         // --- DASHBOARD LOGIC ---
-        function getBadgeClass(score) {
-            if (score > 70) return 'badge-green';
-            if (score >= 40) return 'badge-orange';
-            return 'badge-red';
-        }
-
-        function getClassificationName(score) {
-            if (score > 70) return 'GREEN';
-            if (score >= 40) return 'ORANGE';
-            return 'RED';
+        function getScoreColor(score) {
+            if (score > 70) return 'var(--green)';
+            if (score >= 40) return 'var(--orange)';
+            return 'var(--red)';
         }
 
         async function loadJobs() {
@@ -556,7 +608,7 @@
                 
                 const jobs = await res.json();
                 renderJobs(jobs);
-                subtitle.innerText = `Showing ${jobs.length} matched jobs`;
+                subtitle.innerText = `${jobs.length} Matching Roles`;
             } catch (error) {
                 errorDiv.innerText = error.message;
                 errorDiv.classList.remove('hidden');
@@ -582,7 +634,7 @@
                 grid.innerHTML = '';
                 loading.classList.remove('hidden');
                 errorDiv.classList.add('hidden');
-                subtitle.innerText = `Searching for: "${query}"...`;
+                subtitle.innerText = `Semantic search in progress...`;
 
                 try {
                     const res = await fetch('/api/jobs/search', {
@@ -598,7 +650,7 @@
                     
                     const jobs = await res.json();
                     renderJobs(jobs);
-                    subtitle.innerText = `Found top ${jobs.length} relevant jobs for "${query}"`;
+                    subtitle.innerText = `Top ${jobs.length} results for query`;
                 } catch (error) {
                     errorDiv.innerText = error.message;
                     errorDiv.classList.remove('hidden');
@@ -615,29 +667,43 @@
                 grid.innerHTML = `<div class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">No matching jobs found.</div>`;
                 return;
             }
-            grid.innerHTML = jobs.map(job => `
-                <div class="job-card">
-                    <div class="job-card-header">
-                        <div>
-                            <h3 class="job-title">${escapeHtml(job.title)}</h3>
-                            <p class="job-company">${escapeHtml(job.company)}</p>
+            grid.innerHTML = jobs.map((job, index) => {
+                const color = getScoreColor(job.matchScore);
+                const circumference = 2 * Math.PI * 18;
+                const offset = circumference - (job.matchScore / 100) * circumference;
+                
+                return `
+                <div class="job-card" style="animation-delay: ${index * 0.05}s">
+                    <div class="job-card-content">
+                        <div class="job-card-header">
+                            <div style="flex: 1; padding-right: 1rem;">
+                                <h3 class="job-title">${escapeHtml(job.title)}</h3>
+                                <div class="company-row">
+                                    <span class="company-dot" style="background-color: ${color}"></span>
+                                    ${escapeHtml(job.company)}
+                                </div>
+                            </div>
+                            <div style="flex-shrink: 0;">
+                                <svg width="44" height="44" viewBox="0 0 44 44">
+                                  <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"></circle>
+                                  <circle cx="22" cy="22" r="18" fill="none" stroke="${color}" stroke-width="3" 
+                                          stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" 
+                                          stroke-linecap="round" transform="rotate(-90 22 22)" style="transition: stroke-dashoffset 1s ease-out;"></circle>
+                                  <text x="22" y="26" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">${job.matchScore}</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="match-badge">
+                            <span class="company-dot" style="background-color: ${color}"></span>
+                            ${job.matchScore}% Semantic Match
                         </div>
                     </div>
-                    <div class="job-score-container">
-                        <div class="job-score" style="color: ${getScoreColor(job.matchScore)}">${job.matchScore}</div>
-                        <span class="badge ${getBadgeClass(job.matchScore)}">${getClassificationName(job.matchScore)} MATCH</span>
-                    </div>
-                    <button class="btn btn-outline" onclick="openGapAnalysis('${job.jobId}', '${escapeHtml(job.title)}', '${escapeHtml(job.company)}')">
+                    <button class="btn-analyse" onclick="openGapAnalysis('${job.jobId}', '${escapeHtml(job.title)}', '${escapeHtml(job.company)}')">
                         Analyse Gap
                     </button>
                 </div>
-            `).join('');
-        }
-
-        function getScoreColor(score) {
-            if (score > 70) return 'var(--green)';
-            if (score >= 40) return 'var(--orange)';
-            return 'var(--red)';
+                `;
+            }).join('');
         }
 
         // --- GAP ANALYSIS MODAL LOGIC ---

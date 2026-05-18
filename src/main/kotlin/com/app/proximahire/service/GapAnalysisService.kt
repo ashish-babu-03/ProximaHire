@@ -70,7 +70,8 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
 
     private fun buildPrompt(resumeText: String, jobDescriptionText: String): String {
         return """
-            You are an expert technical recruiter and HR assistant. 
+            You are an expert technical recruiter and HR assistant.
+            Be concise. Maximum 300 words total.
             Please analyze the gap between the following candidate's resume and the target job description.
             
             Provide a structured gap report explaining:
@@ -78,13 +79,15 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
             2. Strong Areas (where the candidate meets or exceeds requirements)
             3. Missing Skills (areas for improvement or gaps)
             
-            Keep the report in plain English, well-formatted, and concise.
+            Stop after providing these three sections only. Keep the report in plain English, well-formatted, and concise.
 
             --- JOB DESCRIPTION ---
             $jobDescriptionText
 
             --- CANDIDATE RESUME ---
             $resumeText
+            
+            IMPORTANT: Stop after the Missing Skills section. Do not add recommendations, next steps, conclusions, or any additional sections. End your response after listing the missing skills.
             
             --- GAP ANALYSIS REPORT ---
         """.trimIndent()
