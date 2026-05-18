@@ -46,8 +46,8 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
     /**
      * Generates a gap analysis and returns it as a reactive stream (Flux).
      */
-    fun analyzeGapStream(resumeText: String, jobDescriptionText: String): Flux<String> {
-        val prompt = buildPrompt(resumeText, jobDescriptionText)
+    fun analyzeGapStream(resumeText: String, jobDescriptionText: String, matchScore: Int): Flux<String> {
+        val prompt = buildPrompt(resumeText, jobDescriptionText, matchScore)
 
         if (llmProvider == "openrouter") {
             return Flux.defer {
@@ -93,11 +93,11 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
     /**
      * Generates a gap analysis and blocks until the full text is aggregated.
      */
-    fun analyzeGap(resumeText: String, jobDescriptionText: String): String {
-        logger.info("Starting gap analysis via \$llmProvider...")
+    fun analyzeGap(resumeText: String, jobDescriptionText: String, matchScore: Int): String {
+        logger.info("Starting gap analysis via \$llmProvider... (pre-computed score=$matchScore)")
         val startTime = System.currentTimeMillis()
         
-        val result = analyzeGapStream(resumeText, jobDescriptionText)
+        val result = analyzeGapStream(resumeText, jobDescriptionText, matchScore)
             .reduce { acc, chunk -> acc + chunk }
             .block() ?: throw RuntimeException("Failed to generate gap analysis: Stream returned empty")
             
@@ -107,14 +107,16 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
         return result
     }
 
-    private fun buildPrompt(resumeText: String, jobDescriptionText: String): String {
+    private fun buildPrompt(resumeText: String, jobDescriptionText: String, matchScore: Int): String {
         return """
             You are an expert technical recruiter and HR assistant.
             Be concise. Maximum 300 words total.
             Please analyze the gap between the following candidate's resume and the target job description.
             
-            Provide a structured gap report explaining:
-            1. Estimated Match Percentage
+            The semantic similarity between this resume and the job description has already been computed using vector cosine similarity and is exactly $matchScore out of 100. Use this exact number for the match percentage — do not estimate or compute your own.
+            
+            Provide a structured gap report with exactly these three sections:
+            1. Match Percentage: $matchScore/100
             2. Strong Areas (where the candidate meets or exceeds requirements)
             3. Missing Skills (areas for improvement or gaps)
             
@@ -126,7 +128,7 @@ class GapAnalysisService(private val webClientBuilder: WebClient.Builder) {
             --- CANDIDATE RESUME ---
             $resumeText
             
-            IMPORTANT: Stop after the Missing Skills section. Do not add recommendations, next steps, conclusions, or any additional sections. End your response after listing the missing skills.
+            IMPORTANT: The match score is $matchScore/100 — use this exact number, do not change it. Stop after the Missing Skills section. Do not add recommendations, next steps, conclusions, or any additional sections.
             
             --- GAP ANALYSIS REPORT ---
         """.trimIndent()

@@ -115,7 +115,10 @@ class JobController(
         val resumeText = latestResume.rawText ?: throw RuntimeException("Resume text is empty.")
         val jobText = job.description ?: throw RuntimeException("Job description is empty.")
 
-        val report = gapAnalysisService.analyzeGap(resumeText, jobText)
+        // Compute the real cosine similarity score — same as shown on the job card
+        val matchResult = matchingService.calculateMatch(latestResume.id!!, job.id!!)
+
+        val report = gapAnalysisService.analyzeGap(resumeText, jobText, matchResult.score)
 
         return ResponseEntity.ok(GapAnalysisResponse(report))
     }
@@ -133,7 +136,9 @@ class JobController(
         val resumeText = latestResume.rawText ?: ""
         val jobText = job.description ?: ""
 
-        return gapAnalysisService.analyzeGapStream(resumeText, jobText)
+        val matchResult = matchingService.calculateMatch(latestResume.id!!, job.id!!)
+
+        return gapAnalysisService.analyzeGapStream(resumeText, jobText, matchResult.score)
     }
 
     private fun extractUserIdFromContext(): UUID {
