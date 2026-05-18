@@ -61,30 +61,31 @@ Gap Analysis:
 
 ```mermaid
 flowchart TD
-    A[User: Browser SPA] -->|POST /api/auth/register\nPOST /api/auth/login| B[AuthController]
-    A -->|POST /api/resumes/upload PDF| C[ResumeController]
-    A -->|GET /api/jobs| D[JobController]
-    A -->|POST /api/jobs/search| D
-    A -->|GET /api/jobs/{id}/gap-analysis| D
+    A[User: Browser SPA] --> B[AuthController]
+    A --> C[ResumeController]
+    A --> D[JobController]
 
-    B --> E[(PostgreSQL\nusers table)]
+    B --> E[(PostgreSQL users table)]
+    
     C --> F[ResumeService]
-    F -->|PDFBox| G[Text Extraction]
+    F --> G[PDFBox Text Extraction]
     G --> H[EmbeddingService]
-    H -->|Ollama local| I[nomic-embed-text\n768 dims]
-    H -->|HuggingFace prod| J[all-MiniLM-L6-v2\n384 dims]
-    I & J -->|FloatArray → float4 array| E
+    
+    H --> I[Ollama: nomic-embed-text 768 dims]
+    H --> J[HuggingFace: all-MiniLM-L6-v2 384 dims]
+    I --> E
+    J --> E
 
     D --> K[MatchingService]
-    K -->|Cosine Similarity in Kotlin| L[Scored Job List]
+    K --> L[Cosine Similarity Scoring]
+    L --> M[Ranked Job Results]
 
-    D --> M[GapAnalysisService]
-    M -->|Ollama local| N[Llama 3.2]
-    M -->|OpenRouter prod| O[Llama 3.2 via API]
+    D --> N[GapAnalysisService]
+    N --> O[Llama 3.2 via Ollama or OpenRouter]
 
-    P[JobDataSeeder\nApplicationRunner] -->|On startup| Q[Remotive API\nlive jobs]
-    Q -->|+ fallback 50 jobs| H
-    H --> R[(jobs table\nembeddings stored)]
+    P[JobDataSeeder on Startup] --> Q[Remotive API]
+    Q --> H
+    H --> R[(jobs table with embeddings)]
 
     E -.- R
 ```
